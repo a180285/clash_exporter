@@ -89,7 +89,7 @@ func (e *Exporter) scrapeProxies(metrics chan<- prometheus.Metric) error {
 	if err != nil {
 		return err
 	}
-	for proxyName, delay := range GetAllProxyDelay(proxies, IsConnectionProxy, e.Client, e.testUrl, e.testUrlTimeout) {
+	for proxyName, delay := range GetAllProxyDelay(proxies, GetProxyNameFilter(), e.Client, e.testUrl, e.testUrlTimeout) {
 		proxy := proxies[proxyName]
 		metrics <- prometheus.MustNewConstMetric(proxyDelay, prometheus.GaugeValue, float64(delay), proxy.Type, proxy.Name, "")
 	}
@@ -206,9 +206,10 @@ func CollectToText(c prometheus.Collector) (string, error) {
 }
 
 var (
-	listenAddress string
-	tlsConfigPath string
-	metricsPath   string
+	listenAddress  string
+	tlsConfigPath  string
+	metricsPath    string
+	proxyNameRegex string
 
 	externalController string
 	secret             string
@@ -229,6 +230,7 @@ func init() {
 	cmd.Flags().StringVar(&externalController, "clash.external-controller", "http://127.0.0.1:9090/", "RESTful web API listening address")
 	cmd.Flags().StringVar(&secret, "clash.secret", "", "Secret for the RESTful API")
 	cmd.Flags().StringVar(&testUrl, "clash.test-url", DefaultTestUrl, "")
+	cmd.Flags().StringVar(&proxyNameRegex, "clash.test.proxy-regex", ".*", "Name regex used for filtering proxy name to test by regexp.FindStringIndex")
 	cmd.Flags().DurationVar(&testUrlTimeout, "clash.test-url-timeout", DefaultTestUrlTimeout, "")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {

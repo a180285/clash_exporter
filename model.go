@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"net"
+	"regexp"
 	"time"
 )
 
@@ -31,6 +32,13 @@ func init() {
 func IsConnectionProxy(proxy *Proxy) bool {
 	_, ok := connectionProxyTypeSet[proxy.Type]
 	return ok
+}
+
+func GetProxyNameFilter() func(*Proxy) bool {
+	regex := regexp.MustCompile(proxyNameRegex)
+	return func(proxy *Proxy) bool {
+		return regex.FindStringIndex(proxy.Name) != nil
+	}
 }
 
 const MaxDelay = math.MaxUint16
